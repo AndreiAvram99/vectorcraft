@@ -3156,22 +3156,31 @@ fn home(app: &mut VectorcraftApp, ui: &mut Ui, rect: egui::Rect) {
     });
 }
 
-/// The Home screen's column: welcome, New / Open, Recent Files, presets and community links.
+/// The Home screen's column: product title, New / Open, Recent Files and presets.
 fn home_content(app: &mut VectorcraftApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
-    ui.label(egui::RichText::new(tl!("Welcome to VectorCraft")).font(theme::semibold(26.0)).color(t.text));
-    ui.add_space(4.0);
-    ui.label(egui::RichText::new(tl!("Vector illustration — fast, open, scriptable.")).size(14.0).color(t.text_dim));
+    ui.label(egui::RichText::new(tl!("VectorCraft")).font(theme::semibold(38.0)).color(t.text));
+    ui.add_space(6.0);
+    ui.label(egui::RichText::new(tl!("Create a new document or open an existing file.")).size(14.0).color(t.text_dim));
     ui.add_space(22.0);
-    ui.horizontal(|ui| {
-        if widgets::primary_button(ui, tl!("New file")).clicked() {
-            app.run("file.newDialog", json!({})).ok();
-        }
-        ui.add_space(8.0);
-        if widgets::secondary_button(ui, tl!("Open")).clicked() {
-            app.run("file.open", json!({})).ok();
-        }
-    });
+    let (mut new_file, mut open) = (false, false);
+    if ui.available_width() >= 392.0 {
+        ui.horizontal(|ui| {
+            new_file = widgets::primary_button_width(ui, tl!("New document…"), 190.0).clicked();
+            ui.add_space(12.0);
+            open = widgets::secondary_button_width(ui, tl!("Open…"), 190.0).clicked();
+        });
+    } else {
+        new_file = widgets::primary_button_width(ui, tl!("New document…"), 190.0).clicked();
+        ui.add_space(12.0);
+        open = widgets::secondary_button_width(ui, tl!("Open…"), 190.0).clicked();
+    }
+    if new_file {
+        app.run("file.newDialog", json!({})).ok();
+    }
+    if open {
+        app.run("file.open", json!({})).ok();
+    }
     recent(app, ui);
     ui.add_space(28.0);
     ui.label(egui::RichText::new(tl!("Quickly start a new file")).font(theme::semibold(14.0)).color(t.text));
@@ -3187,10 +3196,6 @@ fn home_content(app: &mut VectorcraftApp, ui: &mut Ui) {
             }
         }
     });
-    ui.add_space(28.0);
-    ui.label(egui::RichText::new(tl!("Community")).font(theme::semibold(14.0)).color(t.text));
-    ui.add_space(10.0);
-    crate::community::links(app, ui);
 }
 
 /// The Home screen's Recent Files (#663): the first of File › Open Recent Files, each its name and
