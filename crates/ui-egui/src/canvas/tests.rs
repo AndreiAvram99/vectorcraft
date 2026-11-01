@@ -8210,3 +8210,43 @@ fn hidden_artboards_leave_a_paper_canvas_without_edges() {
     app.run("view.artboards", json!({})).unwrap();
     assert_eq!(look(&mut app), (false, true));
 }
+
+/// When GPU invert is inactive (e.g. glow / non-wgpu backends), the translucent Highlight quad is
+/// painted as a fallback so selected text remains visible. When GPU invert is active, the fallback
+/// is skipped.
+#[test]
+fn text_selection_falls_back_to_highlight_when_gpu_invert_inactive() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 800, "height": 600, "created": 0})).unwrap();
+    let ctx = egui::Context::default();
+    let painter = ctx.layer_painter(egui::LayerId::background());
+    let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
+    let xf = Xf::new(rect, app.view().unwrap());
+    let t = Tokens::classic(crate::theme::Brightness::Dark);
+    let look = HandleLook::of(&app.session.prefs);
+
+    let quad = [Point::new(10.0, 10.0), Point::new(100.0, 10.0), Point::new(100.0, 30.0), Point::new(10.0, 30.0)];
+    let overlays = vec![Overlay::Invert { quad }, Overlay::Highlight { quad, color: [60, 120, 255, 90] }];
+
+    // Case 1: Inactive -> Highlight fallback is painted
+    crate::gpu_invert::set_active(false);
+    let shapes_inactive = ctx
+        .run_ui(Default::default(), |_| {
+            draw_overlays(&painter, &xf, &overlays, &t, look);
+        })
+        .shapes;
+    let has_polygon = shapes_inactive.iter().any(|s| matches!(&s.shape, Shape::Path(p) if p.closed));
+    assert!(has_polygon, "fallback convex polygon must be painted when GPU invert is inactive");
+
+    // Case 2: Active -> Highlight fallback is skipped (GPU paint callback handles it)
+    crate::gpu_invert::set_active(true);
+    let shapes_active = ctx
+        .run_ui(Default::default(), |_| {
+            draw_overlays(&painter, &xf, &overlays, &t, look);
+        })
+        .shapes;
+    let has_polygon_active = shapes_active.iter().any(|s| matches!(&s.shape, Shape::Path(p) if p.closed));
+    assert!(!has_polygon_active, "fallback polygon must be skipped when GPU invert is active");
+
+    crate::gpu_invert::set_active(false);
+}
