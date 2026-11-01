@@ -6116,6 +6116,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "vectorcraft-barcode"
+version = "0.19.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "vectorcraft-brush"
 version = "0.19.0"
 dependencies = [
@@ -6191,6 +6200,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.21",
  "tiff",
+ "vectorcraft-barcode",
  "vectorcraft-color",
  "vectorcraft-geom",
  "zune-jpeg 0.5.15",
@@ -6232,6 +6242,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.21",
  "vectorcraft-affinity",
+ "vectorcraft-barcode",
  "vectorcraft-brush",
  "vectorcraft-cad",
  "vectorcraft-color",
@@ -6550,6 +6561,7 @@ dependencies = [
  "serde",
  "serde_json",
  "toml",
+ "vectorcraft-barcode",
  "vectorcraft-brush",
  "vectorcraft-cad",
  "vectorcraft-color",
